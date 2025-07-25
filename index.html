@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube'dan WAV İndir (Sunucusuz)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h3 class="card-title mb-4 text-center">YouTube'dan WAV İndir</h3>
+            <form id="ytForm">
+              <div class="mb-3">
+                <label for="url" class="form-label">YouTube Linki</label>
+                <input type="url" class="form-control" id="url" name="url" placeholder="https://www.youtube.com/watch?v=..." required>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">İndir</button>
+            </form>
+            <div id="result" class="mt-4 text-center"></div>
+          </div>
+        </div>
+        <p class="text-center mt-3 text-muted" style="font-size:0.9em;">Telif haklarına dikkat edin. Sadece izin verilen içerikleri indirin.</p>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.getElementById('ytForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const url = document.getElementById('url').value;
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = 'İşleniyor...';
+      try {
+        // API: https://yt-download.org/api/button/audio?url=YOUTUBE_LINK
+        const apiUrl = `https://yt-download.org/api/button/audio?url=${encodeURIComponent(url)}`;
+        const response = await fetch(apiUrl);
+        const html = await response.text();
+        // WAV linkini bul ve göster
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        const wavLink = Array.from(tempDiv.querySelectorAll('a')).find(a => a.textContent.includes('WAV'));
+        if (wavLink) {
+          resultDiv.innerHTML = `<a href="${wavLink.href}" class="btn btn-success">WAV Dosyasını İndir</a>`;
+        } else {
+          resultDiv.innerHTML = 'WAV formatı bulunamadı veya API limiti doldu.';
+        }
+      } catch (err) {
+        resultDiv.innerHTML = 'Bir hata oluştu.';
+      }
+    });
+  </script>
+</body>
+</html>
