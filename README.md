@@ -1,84 +1,135 @@
-# YouTube WAV İndirici (GitHub Pages)
+# 🎵 YouTube WAV İndirici
 
-Bu proje YouTube videolarını WAV formatında indirmenizi sağlar. Mobil uyumlu, PWA özellikli ve GitHub Pages'de çalışır.
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live-brightgreen)](https://your-username.github.io/yt-wav-downloader)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PWA](https://img.shields.io/badge/PWA-Enabled-blue)](https://web.dev/progressive-web-apps/)
+[![Mobile Friendly](https://img.shields.io/badge/Mobile-Friendly-green)](https://developers.google.com/search/mobile-sites)
 
-## Özellikler
+> GitHub Pages üzerinde çalışan, YouTube videolarını WAV/MP3 formatında indirmenizi sağlayan **tamamen ücretsiz** web uygulaması.
 
-- ✅ Mobil uyumlu tasarım
-- ✅ PWA (Progressive Web App) desteği
-- ✅ Offline çalışma
+## ✨ Özellikler
+
+- 🆓 **Tamamen Ücretsiz** - GitHub Pages üzerinde çalışır
+- 📱 **Mobil Uyumlu** - Tüm cihazlarda mükemmel çalışır
+- ⚡ **Hızlı İndirme** - Birden fazla API ile güvenilir indirme
+- 🎵 **WAV/MP3 Desteği** - Yüksek kaliteli ses dosyaları
+- 📲 **PWA Desteği** - Uygulama gibi kullanabilirsiniz
+- 🔒 **Güvenli** - Hiçbir veri saklanmaz
+- 🌐 **Offline Çalışma** - Service Worker ile offline destek
+
+## 🚀 Canlı Demo
+
+**[🌐 Uygulamayı Hemen Deneyin](https://your-username.github.io/yt-wav-downloader)**
+
+## 🎯 Nasıl Kullanılır
+
+1. **YouTube video linkini** girin
+2. **"İndir"** butonuna tıklayın
+3. **İndirme linkini** alın ve dosyayı indirin
+
+### Desteklenen Link Formatları
+- `https://www.youtube.com/watch?v=VIDEO_ID`
+- `https://youtu.be/VIDEO_ID`
+- `https://youtube.com/watch?v=VIDEO_ID`
+
+## 🔧 Teknik Detaylar
+
+| Teknoloji | Açıklama |
+|-----------|----------|
+| **Frontend** | HTML5, CSS3, JavaScript (ES6+) |
+| **UI Framework** | Bootstrap 5.3 |
+| **PWA** | Service Worker ile offline destek |
+| **API'ler** | YT-DLP, Y2Mate, YT-Download |
+| **Hosting** | GitHub Pages (Ücretsiz) |
+
+## 📱 Mobil Uyumluluk
+
+- ✅ iOS Safari
+- ✅ Android Chrome
+- ✅ PWA olarak yüklenebilir
 - ✅ Touch-friendly arayüz
-- ✅ Çoklu API desteği
-- ✅ GitHub Pages uyumlu
-- ✅ Bootstrap 5 responsive tasarım
-- ✅ Hata yönetimi ve kullanıcı bildirimleri
+- ✅ Responsive tasarım
 
-## GitHub Pages'de Yayınlama
+## 🛠️ Geliştirme
 
-1. Bu repository'yi GitHub'a push edin
-2. Repository Settings > Pages bölümüne gidin
-3. Source olarak "Deploy from a branch" seçin
-4. Branch olarak "main" seçin
-5. Save butonuna tıklayın
-6. Birkaç dakika sonra siteniz `https://username.github.io/repository-name` adresinde yayında olacak
+### Yerel Geliştirme
+```bash
+# Repository'yi clone edin
+git clone https://github.com/your-username/yt-wav-downloader.git
+cd yt-wav-downloader
 
-## Mobil Kullanım
-
-- Ana sayfa mobil cihazlarda optimize edilmiştir
-- PWA olarak ana ekrana eklenebilir
-- Offline çalışma desteği vardır
-- Touch gesture'lar desteklenir
-- iOS ve Android uyumlu
-
-## Teknik Detaylar
-
-- Static HTML/CSS/JavaScript
-- Bootstrap 5.3.0
-- Service Worker (PWA)
-- Multiple API fallback
-- Mobile-first design
-- No server required
-
-## Proje Yapısı
-
-```
-├── index.html          # Ana sayfa (GitHub Pages için)
-├── manifest.json       # PWA manifest
-├── sw.js              # Service Worker
-├── 404.html           # 404 sayfası
-├── .nojekyll          # Jekyll devre dışı
-└── README.md           # Bu dosya
+# index.html dosyasını tarayıcıda açın
+open index.html
 ```
 
-## Kullanım
+### Katkıda Bulunma
+1. **Fork** edin bu repository'yi
+2. **Branch** oluşturun (`git checkout -b feature/amazing-feature`)
+3. **Commit** yapın (`git commit -m 'Add amazing feature'`)
+4. **Push** edin (`git push origin feature/amazing-feature`)
+5. **Pull Request** açın
 
-1. GitHub Pages'de yayınladıktan sonra sitenize gidin
-2. YouTube video linkini girin
-3. "İndir" butonuna tıklayın
-4. WAV/MP3 dosyasını indirin
+Detaylı bilgi için [CONTRIBUTING.md](CONTRIBUTING.md) dosyasını inceleyin.
 
-## PWA Özellikleri
+## 🚀 GitHub Pages'e Deploy Etme
 
-- Ana ekrana ekleme desteği
-- Offline çalışma
-- App-like deneyim
-- Push notification desteği (gelecekte)
+### Otomatik Deploy
+1. Bu repository'yi **fork** edin
+2. **Settings > Pages** bölümüne gidin
+3. **Source** olarak "Deploy from a branch" seçin
+4. **Branch** olarak "main" seçin
+5. **Save** butonuna tıklayın
 
-## Mobil Optimizasyonlar
+Uygulamanız `https://kullaniciadi.github.io/yt-wav-downloader` adresinde yayında olacak!
 
-- Touch-friendly butonlar
-- Zoom prevention (iOS)
-- Responsive design
-- Fast loading
-- Minimal data usage
+### Manuel Deploy
+```bash
+# Dosyaları GitHub'a push edin
+git add .
+git commit -m "Deploy to GitHub Pages"
+git push origin main
+```
 
-## Notlar
+## 📊 API'ler
 
-- Telif haklarına dikkat edin
-- Sadece izin verilen içerikleri indirin
-- Mobil cihazlarda en iyi deneyim için PWA olarak yükleyin
-- Çoklu API kullanımı sayesinde yüksek başarı oranı
+Bu uygulama aşağıdaki API'leri kullanır:
 
-## Lisans
+| API | Açıklama | Durum |
+|-----|----------|-------|
+| **YT-DLP API** | Ana indirme API'si | ✅ Aktif |
+| **Y2Mate API** | Yedek indirme API'si | ✅ Aktif |
+| **YT-Download API** | Alternatif API | ✅ Aktif |
 
-Bu proje eğitim amaçlıdır. Kullanımından doğacak sorumluluklar kullanıcıya aittir.
+## ⚖️ Yasal Uyarı
+
+> ⚠️ **ÖNEMLİ**: Bu uygulama sadece telif hakkı koruması olmayan veya izin verilen içeriklerin indirilmesi için tasarlanmıştır. Lütfen telif haklarına saygı gösterin ve sadece yasal içerikleri indirin.
+
+## 🤝 Katkıda Bulunanlar
+
+Bu projeye katkıda bulunan herkese teşekkürler! 🙏
+
+- [@your-username](https://github.com/your-username) - Proje sahibi
+
+## 📈 İstatistikler
+
+![GitHub stars](https://img.shields.io/github/stars/your-username/yt-wav-downloader?style=social)
+![GitHub forks](https://img.shields.io/github/forks/your-username/yt-wav-downloader?style=social)
+![GitHub issues](https://img.shields.io/github/issues/your-username/yt-wav-downloader)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/your-username/yt-wav-downloader)
+
+## 📄 Lisans
+
+Bu proje [MIT License](LICENSE) altında lisanslanmıştır. Detaylar için `LICENSE` dosyasını inceleyin.
+
+## 🆘 Destek
+
+- 🐛 **Bug raporu**: [Issues](https://github.com/your-username/yt-wav-downloader/issues) bölümünden
+- 💡 **Özellik isteği**: [Feature Request](https://github.com/your-username/yt-wav-downloader/issues/new?template=feature_request.md) template'ini kullanın
+- ❓ **Sorular**: [Discussions](https://github.com/your-username/yt-wav-downloader/discussions) bölümünden
+
+---
+
+<div align="center">
+  <p>⭐ Bu projeyi beğendiyseniz yıldız vermeyi unutmayın!</p>
+  <p>Made with ❤️ by [Your Name]</p>
+</div>
