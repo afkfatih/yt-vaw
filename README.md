@@ -1,109 +1,84 @@
-# YouTube'dan WAV İndirici
+# YouTube WAV İndirici (GitHub Pages)
 
-Bu proje, YouTube videolarını WAV formatında ses dosyası olarak indirmenizi sağlayan bir Flask web uygulamasıdır.
+Bu proje YouTube videolarını WAV formatında indirmenizi sağlar. Mobil uyumlu, PWA özellikli ve GitHub Pages'de çalışır.
 
 ## Özellikler
 
-- YouTube videolarını WAV formatında indirme
-- Modern ve kullanıcı dostu arayüz
-- Bootstrap 5 ile responsive tasarım
-- Hata yönetimi ve kullanıcı bildirimleri
-- Güvenli dosya indirme sistemi
+- ✅ Mobil uyumlu tasarım
+- ✅ PWA (Progressive Web App) desteği
+- ✅ Offline çalışma
+- ✅ Touch-friendly arayüz
+- ✅ Çoklu API desteği
+- ✅ GitHub Pages uyumlu
+- ✅ Bootstrap 5 responsive tasarım
+- ✅ Hata yönetimi ve kullanıcı bildirimleri
 
-## Gereksinimler
+## GitHub Pages'de Yayınlama
 
-- Python 3.6+
-- Flask
-- yt-dlp
+1. Bu repository'yi GitHub'a push edin
+2. Repository Settings > Pages bölümüne gidin
+3. Source olarak "Deploy from a branch" seçin
+4. Branch olarak "main" seçin
+5. Save butonuna tıklayın
+6. Birkaç dakika sonra siteniz `https://username.github.io/repository-name` adresinde yayında olacak
 
-## Kurulum
+## Mobil Kullanım
 
-1. Projeyi klonlayın veya indirin:
-```bash
-git clone <repository-url>
-cd <project-directory>
-```
+- Ana sayfa mobil cihazlarda optimize edilmiştir
+- PWA olarak ana ekrana eklenebilir
+- Offline çalışma desteği vardır
+- Touch gesture'lar desteklenir
+- iOS ve Android uyumlu
 
-2. Gerekli paketleri yükleyin:
-```bash
-pip install -r requirements.txt
-```
+## Teknik Detaylar
 
-3. FFmpeg'in sisteminizde yüklü olduğundan emin olun:
-```bash
-# Ubuntu/Debian
-sudo apt update
-sudo apt install ffmpeg
-
-# macOS (Homebrew)
-brew install ffmpeg
-
-# Windows
-# https://ffmpeg.org/download.html adresinden indirin
-```
-
-## Kullanım
-
-1. Uygulamayı başlatın:
-```bash
-python app.py
-```
-
-2. Tarayıcınızda `http://localhost:5000` adresine gidin
-
-3. YouTube video linkini girin ve "İndir" butonuna tıklayın
-
-4. İndirme işlemi tamamlandıktan sonra WAV dosyasını indirin
+- Static HTML/CSS/JavaScript
+- Bootstrap 5.3.0
+- Service Worker (PWA)
+- Multiple API fallback
+- Mobile-first design
+- No server required
 
 ## Proje Yapısı
 
 ```
-├── app.py              # Ana Flask uygulaması
-├── requirements.txt    # Python bağımlılıkları
-├── templates/          # HTML şablonları
-│   └── index.html      # Ana sayfa şablonu
-├── downloads/          # İndirilen dosyalar (otomatik oluşturulur)
-└── README.md          # Bu dosya
+├── index.html          # Ana sayfa (GitHub Pages için)
+├── manifest.json       # PWA manifest
+├── sw.js              # Service Worker
+├── 404.html           # 404 sayfası
+├── .nojekyll          # Jekyll devre dışı
+└── README.md           # Bu dosya
 ```
 
-## API Endpoints
+## Kullanım
 
-- `GET /` - Ana sayfa
-- `POST /` - YouTube linki gönderme
-- `GET /downloads/<filename>` - Dosya indirme
+1. GitHub Pages'de yayınladıktan sonra sitenize gidin
+2. YouTube video linkini girin
+3. "İndir" butonuna tıklayın
+4. WAV/MP3 dosyasını indirin
 
-## Teknik Detaylar
+## PWA Özellikleri
 
-- **Framework**: Flask
-- **Video İndirme**: yt-dlp
-- **Ses Formatı**: WAV (192 kbps)
-- **Frontend**: Bootstrap 5
-- **Dosya Yönetimi**: UUID ile benzersiz dosya isimleri
+- Ana ekrana ekleme desteği
+- Offline çalışma
+- App-like deneyim
+- Push notification desteği (gelecekte)
 
-## Güvenlik Notları
+## Mobil Optimizasyonlar
+
+- Touch-friendly butonlar
+- Zoom prevention (iOS)
+- Responsive design
+- Fast loading
+- Minimal data usage
+
+## Notlar
 
 - Telif haklarına dikkat edin
 - Sadece izin verilen içerikleri indirin
-- İndirilen dosyalar geçicidir ve sunucuda saklanır
-
-## Sorun Giderme
-
-### FFmpeg Hatası
-Eğer FFmpeg bulunamadı hatası alıyorsanız, FFmpeg'in sistem PATH'inde olduğundan emin olun.
-
-### İndirme Hatası
-- YouTube linkinin geçerli olduğundan emin olun
-- İnternet bağlantınızı kontrol edin
-- Video'nun özel olmadığından emin olun
+- Mobil cihazlarda en iyi deneyim için PWA olarak yükleyin
+- Çoklu API kullanımı sayesinde yüksek başarı oranı
 
 ## Lisans
 
 Bu proje eğitim amaçlıdır. Kullanımından doğacak sorumluluklar kullanıcıya aittir.
-
-## Katkıda Bulunma
-
-1. Fork yapın
-2. Feature branch oluşturun (`git checkout -b feature/AmazingFeature`)
-3. Commit yapın (`git commit -m 'Add some AmazingFeature'`)
-4. Push yapın (`git push origin feature/AmazingFeature`)
-5. Pull Request oluşturun
