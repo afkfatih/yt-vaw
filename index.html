@@ -101,68 +101,48 @@
       resultDiv.innerHTML = '';
       
       try {
-        // Try multiple APIs for better reliability
-        const apis = [
-          `https://yt-download.org/api/button/audio?url=${encodeURIComponent(url)}`,
-          `https://api.vevioz.com/api/button/mp3?url=${encodeURIComponent(url)}`
-        ];
+        // Use the Flask backend instead of external APIs
+        const formData = new FormData();
+        formData.append('url', url);
         
-        let success = false;
-        for (const apiUrl of apis) {
-          try {
-            const response = await fetch(apiUrl, {
-              method: 'GET',
-              headers: {
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'User-Agent': 'Mozilla/5.0 (compatible; Mobile)'
-              }
-            });
-            
-            if (response.ok) {
-              const html = await response.text();
-              const tempDiv = document.createElement('div');
-              tempDiv.innerHTML = html;
-              
-              // Look for WAV or MP3 links
-              const audioLinks = Array.from(tempDiv.querySelectorAll('a')).filter(a => 
-                a.textContent.includes('WAV') || 
-                a.textContent.includes('MP3') || 
-                a.href.includes('.wav') || 
-                a.href.includes('.mp3')
-              );
-              
-              if (audioLinks.length > 0) {
-                const link = audioLinks[0];
-                resultDiv.innerHTML = `
-                  <div class="alert alert-success">
-                    <h6>İndirme Hazır!</h6>
-                    <a href="${link.href}" class="btn btn-success btn-lg mt-2" download>
-                      <i class="bi bi-download"></i> ${link.textContent.trim() || 'Dosyayı İndir'}
-                    </a>
-                  </div>
-                `;
-                success = true;
-                break;
-              }
+        const response = await fetch('/', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (response.ok) {
+          const html = await response.text();
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = html;
+          
+          // Look for download link in the response
+          const downloadLink = tempDiv.querySelector('a[href*="/downloads/"]');
+          
+          if (downloadLink) {
+            resultDiv.innerHTML = `
+              <div class="alert alert-success">
+                <h6>İndirme Hazır!</h6>
+                <a href="${downloadLink.href}" class="btn btn-success btn-lg mt-2" download>
+                  <i class="bi bi-download"></i> WAV Dosyasını İndir
+                </a>
+              </div>
+            `;
+          } else {
+            // Check for error messages
+            const errorAlert = tempDiv.querySelector('.alert-danger');
+            if (errorAlert) {
+              resultDiv.innerHTML = `
+                <div class="alert alert-danger">
+                  <h6>Hata Oluştu</h6>
+                  <p>${errorAlert.textContent.trim()}</p>
+                </div>
+              `;
+            } else {
+              throw new Error('Download link not found in response');
             }
-          } catch (apiError) {
-            console.log('API error:', apiError);
-            continue;
           }
-        }
-        
-        if (!success) {
-          resultDiv.innerHTML = `
-            <div class="alert alert-warning">
-              <h6>İndirme Bulunamadı</h6>
-              <p>Bu video için ses dosyası bulunamadı. Lütfen:</p>
-              <ul class="text-start">
-                <li>Video linkinin doğru olduğundan emin olun</li>
-                <li>Video'nun herkese açık olduğunu kontrol edin</li>
-                <li>Birkaç dakika sonra tekrar deneyin</li>
-              </ul>
-            </div>
-          `;
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
       } catch (err) {
@@ -170,7 +150,8 @@
         resultDiv.innerHTML = `
           <div class="alert alert-danger">
             <h6>Bir Hata Oluştu</h6>
-            <p>İndirme işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.</p>
+            <p>İndirme işlemi sırasında bir hata oluştu: ${err.message}</p>
+            <p>Lütfen tekrar deneyin veya farklı bir video linki kullanın.</p>
           </div>
         `;
       } finally {
