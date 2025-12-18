@@ -81,6 +81,35 @@
     </div>
   </div>
   <script>
+    function getYouTubeVideoId(inputUrl) {
+      try {
+        const u = new URL(inputUrl);
+
+        // youtu.be/<id>
+        if (u.hostname === 'youtu.be') {
+          const id = u.pathname.replace('/', '').trim();
+          return id || null;
+        }
+
+        // youtube.com/watch?v=<id>
+        const v = u.searchParams.get('v');
+        if (v) return v;
+
+        // youtube.com/shorts/<id>  |  youtube.com/embed/<id>
+        const parts = u.pathname.split('/').filter(Boolean);
+        const idx = parts.findIndex((p) => p === 'shorts' || p === 'embed');
+        if (idx >= 0 && parts[idx + 1]) return parts[idx + 1];
+
+        return null;
+      } catch {
+        return null;
+      }
+    }
+
+    function openExternal(url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+
     // Mobile-friendly form handling
     document.getElementById('ytForm').addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -103,143 +132,42 @@
       resultDiv.innerHTML = '';
       
       try {
-        // Try multiple reliable APIs for GitHub Pages compatibility
-        const apis = [
-          {
-            name: 'YT-DLP API',
-            url: `https://api.vevioz.com/api/button/mp3?url=${encodeURIComponent(url)}`,
-            extractor: (html) => {
-              const tempDiv = document.createElement('div');
-              tempDiv.innerHTML = html;
-              const links = Array.from(tempDiv.querySelectorAll('a')).filter(a => 
-                a.href.includes('.mp3') || a.href.includes('.wav') || 
-                a.textContent.includes('MP3') || a.textContent.includes('WAV')
-              );
-              return links.length > 0 ? links[0] : null;
-            }
-          },
-          {
-            name: 'YT-Download API',
-            url: `https://yt-download.org/api/button/audio?url=${encodeURIComponent(url)}`,
-            extractor: (html) => {
-              const tempDiv = document.createElement('div');
-              tempDiv.innerHTML = html;
-              const links = Array.from(tempDiv.querySelectorAll('a')).filter(a => 
-                a.href.includes('.mp3') || a.href.includes('.wav') || 
-                a.textContent.includes('MP3') || a.textContent.includes('WAV')
-              );
-              return links.length > 0 ? links[0] : null;
-            }
-          },
-          {
-            name: 'Y2Mate API',
-            url: `https://www.y2mate.com/mates/analyze/ajax`,
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-              'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: `url=${encodeURIComponent(url)}&q_auto=0&ajax=1`,
-            extractor: (html) => {
-              try {
-                const data = JSON.parse(html);
-                if (data.result && data.result.links) {
-                  const audioLink = data.result.links.mp3 || data.result.links.wav;
-                  if (audioLink && audioLink.k) {
-                    return {
-                      href: `https://www.y2mate.com/mates/convert/${audioLink.k}/mp3/320`,
-                      textContent: 'WAV/MP3 İndir'
-                    };
-                  }
-                }
-              } catch (e) {
-                console.log('Y2Mate parsing error:', e);
-              }
-              return null;
-            }
-          }
-        ];
-        
-        let success = false;
-        let lastError = null;
-        
-        for (const api of apis) {
-          try {
-            console.log(`Trying ${api.name}...`);
-            
-            const response = await fetch(api.url, {
-              method: api.method || 'GET',
-              headers: {
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                ...api.headers
-              },
-              body: api.body,
-              mode: 'cors',
-              credentials: 'omit'
-            });
-            
-            if (response.ok) {
-              const html = await response.text();
-              const link = api.extractor(html);
-              
-              if (link) {
-                resultDiv.innerHTML = `
-                  <div class="alert alert-success">
-                    <h6>İndirme Hazır!</h6>
-                    <p><strong>Kaynak:</strong> ${api.name}</p>
-                    <a href="${link.href}" class="btn btn-success btn-lg mt-2" download target="_blank">
-                      <i class="bi bi-download"></i> ${link.textContent || 'WAV/MP3 Dosyasını İndir'}
-                    </a>
-                    <p class="mt-2 text-muted small">Not: İndirme başlamazsa, linke sağ tıklayıp "Farklı kaydet" seçeneğini kullanın.</p>
-                  </div>
-                `;
-                success = true;
-                break;
-              }
-            } else {
-              lastError = `HTTP ${response.status}: ${response.statusText}`;
-            }
-          } catch (apiError) {
-            console.log(`${api.name} error:`, apiError);
-            // CORS hatası için özel mesaj
-            if (apiError.message.includes('CORS') || apiError.message.includes('Failed to fetch')) {
-              lastError = `${api.name}: CORS hatası - API tarayıcıdan erişime izin vermiyor`;
-            } else if (apiError.message.includes('ERR_NAME_NOT_RESOLVED')) {
-              lastError = `${api.name}: Sunucu bulunamadı`;
-            } else {
-              lastError = `${api.name}: ${apiError.message}`;
-            }
-            continue;
-          }
-        }
-        
-        if (!success) {
-          const isCorsError = lastError && lastError.includes('CORS');
-          resultDiv.innerHTML = `
-            <div class="alert alert-warning">
-              <h6>İndirme Bulunamadı</h6>
-              ${isCorsError ? `
-                <p><strong>CORS Hatası:</strong> Harici API'ler tarayıcıdan doğrudan erişime izin vermiyor.</p>
-                <p class="text-muted small">Bu bir güvenlik kısıtlamasıdır. Alternatif çözümler:</p>
-                <ul class="text-start">
-                  <li>Backend proxy servisi kullanın</li>
-                  <li>Browser extension kullanın</li>
-                  <li>Manuel olarak video ID'sini kopyalayıp yt-dlp gibi araçlar kullanın</li>
-                </ul>
-              ` : `
-                <p>Bu video için ses dosyası bulunamadı. Lütfen:</p>
-                <ul class="text-start">
-                  <li>Video linkinin doğru olduğundan emin olun</li>
-                  <li>Video'nun herkese açık olduğunu kontrol edin</li>
-                  <li>Video'nun telif hakkı korumalı olmadığını kontrol edin</li>
-                  <li>Birkaç dakika sonra tekrar deneyin</li>
-                </ul>
-              `}
-              <p class="mt-2 text-muted small"><strong>Teknik Detay:</strong> ${lastError || 'Bilinmeyen hata'}</p>
+        // GitHub Pages ortamında CORS nedeniyle 3. parti servisleri fetch ile çağırmak çalışmaz.
+        // Çözüm: Servisleri yeni sekmede aç (navigation CORS'a takılmaz).
+        const videoId = getYouTubeVideoId(url);
+        const veviozUrl = `https://api.vevioz.com/api/button/mp3?url=${encodeURIComponent(url)}`;
+        const ytdlUrl = `https://yt-download.org/api/button/audio?url=${encodeURIComponent(url)}`;
+        const y2mateUrl = videoId ? `https://www.y2mate.com/youtube/${encodeURIComponent(videoId)}` : `https://www.y2mate.com/`;
+
+        resultDiv.innerHTML = `
+          <div class="alert alert-info text-start">
+            <h6 class="mb-2">İndirme için bir servis seç</h6>
+            <p class="mb-2 text-muted small">
+              Not: GitHub Pages'te tarayıcıdan doğrudan API'lere istek atmak CORS yüzünden engellenir.
+              Bu yüzden servisleri yeni sekmede açıyoruz.
+            </p>
+            <div class="d-grid gap-2">
+              <button type="button" class="btn btn-success" id="openVevioz">Vevioz (MP3 buton)</button>
+              <button type="button" class="btn btn-success" id="openYtdl">YT-Download (Audio buton)</button>
+              <button type="button" class="btn btn-secondary" id="openY2mate">Y2Mate (web arayüz)</button>
             </div>
-          `;
-        }
+            <hr class="my-3">
+            <div class="small text-muted">
+              <div><strong>Video ID:</strong> ${videoId || 'Bulunamadı (link formatını kontrol edin)'}</div>
+              <div class="mt-1"><strong>İpucu:</strong> Açılan sayfada ses formatını seçip indirmeniz gerekebilir.</div>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('openVevioz').addEventListener('click', function() {
+          openExternal(veviozUrl);
+        });
+        document.getElementById('openYtdl').addEventListener('click', function() {
+          openExternal(ytdlUrl);
+        });
+        document.getElementById('openY2mate').addEventListener('click', function() {
+          openExternal(y2mateUrl);
+        });
         
       } catch (err) {
         console.error('Error:', err);
@@ -286,6 +214,12 @@
         navigator.serviceWorker.register(swPath)
           .then(function(registration) {
             console.log('ServiceWorker registration successful with scope:', registration.scope);
+            // Yeni sw.js'in daha hızlı aktif olması için güncelleme iste.
+            try {
+              registration.update();
+            } catch (e) {
+              // Sessizce geç
+            }
           })
           .catch(function(err) {
             console.log('ServiceWorker registration failed:', err);

@@ -1,47 +1,98 @@
-const CACHE_NAME = 'yt-wav-v1';
-const urlsToCache = [
+const CACHE_NAME = 'yt-vaw-v2';
+const PRECACHE_URLS = [
   './',
   './index.html',
   './favicon.svg',
   './icon-192x192.png',
   './icon-512x512.png',
-  './manifest.json',
-  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css'
+  './manifest.json'
 ];
 
 // Install event
 self.addEventListener('install', function(event) {
   event.waitUntil(
-    caches.open(CACHE_NAME)
+    caches
+      .open(CACHE_NAME)
       .then(function(cache) {
-        return cache.addAll(urlsToCache);
+        return cache.addAll(PRECACHE_URLS);
+      })
+      .then(function() {
+        return self.skipWaiting();
+      })
+      .catch(function() {
+        // Ağ hatasında bile SW kurulsun; PWA cache opsiyonel.
+        return self.skipWaiting();
       })
   );
 });
 
 // Fetch event
 self.addEventListener('fetch', function(event) {
+  const request = event.request;
+
+  // Sadece GET isteklerini ve sadece same-origin istekleri cache'le.
+  // Harici API'lere yapılan fetch'ler (CORS vb.) SW tarafından ele alınmasın.
+  if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+
+  // Navigations: network-first (offline'da cache'e düş)
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then(function(response) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(function(cache) {
+            cache.put(request, copy);
+          });
+          return response;
+        })
+        .catch(function() {
+          return caches.match(request).then(function(cached) {
+            return cached || caches.match('./index.html');
+          });
+        })
+    );
+    return;
+  }
+
+  // Diğer same-origin GET'ler: cache-first + arkaplanda güncelle
   event.respondWith(
-    caches.match(event.request)
-      .then(function(response) {
-        // Return cached version or fetch from network
-        return response || fetch(event.request);
-      }
-    )
+    caches.match(request).then(function(cached) {
+      if (cached) return cached;
+
+      return fetch(request)
+        .then(function(response) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(function(cache) {
+            cache.put(request, copy);
+          });
+          return response;
+        })
+        .catch(function() {
+          return cached;
+        });
+    })
   );
 });
 
 // Activate event
 self.addEventListener('activate', function(event) {
   event.waitUntil(
-    caches.keys().then(function(cacheNames) {
-      return Promise.all(
-        cacheNames.map(function(cacheName) {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches
+      .keys()
+      .then(function(cacheNames) {
+        return Promise.all(
+          cacheNames.map(function(cacheName) {
+            if (cacheName !== CACHE_NAME) {
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      })
+      .then(function() {
+        return self.clients.claim();
+      })
   );
 });
