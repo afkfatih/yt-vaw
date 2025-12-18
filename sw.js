@@ -1,7 +1,11 @@
 const CACHE_NAME = 'yt-wav-v1';
 const urlsToCache = [
-  '/',
-  '/index.html',
+  './',
+  './index.html',
+  './favicon.svg',
+  './icon-192x192.png',
+  './icon-512x512.png',
+  './manifest.json',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css'
 ];
 
