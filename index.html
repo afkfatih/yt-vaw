@@ -7,6 +7,8 @@
   <meta name="keywords" content="youtube, wav, indir, mp3, ses, video">
   <meta name="theme-color" content="#0d6efd">
   <title>YouTube'dan WAV İndir - GitHub Pages</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" href="icon-192x192.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192x192.png">
@@ -172,7 +174,9 @@
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
                 ...api.headers
               },
-              body: api.body
+              body: api.body,
+              mode: 'cors',
+              credentials: 'omit'
             });
             
             if (response.ok) {
@@ -198,23 +202,41 @@
             }
           } catch (apiError) {
             console.log(`${api.name} error:`, apiError);
-            lastError = apiError.message;
+            // CORS hatası için özel mesaj
+            if (apiError.message.includes('CORS') || apiError.message.includes('Failed to fetch')) {
+              lastError = `${api.name}: CORS hatası - API tarayıcıdan erişime izin vermiyor`;
+            } else if (apiError.message.includes('ERR_NAME_NOT_RESOLVED')) {
+              lastError = `${api.name}: Sunucu bulunamadı`;
+            } else {
+              lastError = `${api.name}: ${apiError.message}`;
+            }
             continue;
           }
         }
         
         if (!success) {
+          const isCorsError = lastError && lastError.includes('CORS');
           resultDiv.innerHTML = `
             <div class="alert alert-warning">
               <h6>İndirme Bulunamadı</h6>
-              <p>Bu video için ses dosyası bulunamadı. Lütfen:</p>
-              <ul class="text-start">
-                <li>Video linkinin doğru olduğundan emin olun</li>
-                <li>Video'nun herkese açık olduğunu kontrol edin</li>
-                <li>Video'nun telif hakkı korumalı olmadığını kontrol edin</li>
-                <li>Birkaç dakika sonra tekrar deneyin</li>
-              </ul>
-              <p class="mt-2 text-muted small">Son hata: ${lastError || 'Bilinmeyen hata'}</p>
+              ${isCorsError ? `
+                <p><strong>CORS Hatası:</strong> Harici API'ler tarayıcıdan doğrudan erişime izin vermiyor.</p>
+                <p class="text-muted small">Bu bir güvenlik kısıtlamasıdır. Alternatif çözümler:</p>
+                <ul class="text-start">
+                  <li>Backend proxy servisi kullanın</li>
+                  <li>Browser extension kullanın</li>
+                  <li>Manuel olarak video ID'sini kopyalayıp yt-dlp gibi araçlar kullanın</li>
+                </ul>
+              ` : `
+                <p>Bu video için ses dosyası bulunamadı. Lütfen:</p>
+                <ul class="text-start">
+                  <li>Video linkinin doğru olduğundan emin olun</li>
+                  <li>Video'nun herkese açık olduğunu kontrol edin</li>
+                  <li>Video'nun telif hakkı korumalı olmadığını kontrol edin</li>
+                  <li>Birkaç dakika sonra tekrar deneyin</li>
+                </ul>
+              `}
+              <p class="mt-2 text-muted small"><strong>Teknik Detay:</strong> ${lastError || 'Bilinmeyen hata'}</p>
             </div>
           `;
         }
@@ -259,12 +281,15 @@
     // Register service worker for PWA functionality
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/sw.js')
+        // GitHub Pages için doğru yol: /yt-vaw/sw.js veya ./sw.js
+        const swPath = './sw.js';
+        navigator.serviceWorker.register(swPath)
           .then(function(registration) {
-            console.log('ServiceWorker registration successful');
+            console.log('ServiceWorker registration successful with scope:', registration.scope);
           })
           .catch(function(err) {
-            console.log('ServiceWorker registration failed');
+            console.log('ServiceWorker registration failed:', err);
+            // Hata durumunda sessizce devam et
           });
       });
     }
