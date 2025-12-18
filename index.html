@@ -103,59 +103,78 @@
       resultDiv.innerHTML = '';
       
       try {
-        // Try multiple reliable APIs for GitHub Pages compatibility
+        // Extract video ID from URL
+        const videoIdMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+        const videoId = videoIdMatch ? videoIdMatch[1] : null;
+        
+        if (!videoId) {
+          resultDiv.innerHTML = '<div class="alert alert-warning">Geçerli bir YouTube video ID\'si bulunamadı.</div>';
+          return;
+        }
+        
+        // Try multiple APIs with CORS proxy support
         const apis = [
           {
-            name: 'YT-DLP API',
-            url: `https://api.vevioz.com/api/button/mp3?url=${encodeURIComponent(url)}`,
-            extractor: (html) => {
-              const tempDiv = document.createElement('div');
-              tempDiv.innerHTML = html;
-              const links = Array.from(tempDiv.querySelectorAll('a')).filter(a => 
-                a.href.includes('.mp3') || a.href.includes('.wav') || 
-                a.textContent.includes('MP3') || a.textContent.includes('WAV')
-              );
-              return links.length > 0 ? links[0] : null;
-            }
-          },
-          {
-            name: 'YT-Download API',
-            url: `https://yt-download.org/api/button/audio?url=${encodeURIComponent(url)}`,
-            extractor: (html) => {
-              const tempDiv = document.createElement('div');
-              tempDiv.innerHTML = html;
-              const links = Array.from(tempDiv.querySelectorAll('a')).filter(a => 
-                a.href.includes('.mp3') || a.href.includes('.wav') || 
-                a.textContent.includes('MP3') || a.textContent.includes('WAV')
-              );
-              return links.length > 0 ? links[0] : null;
-            }
-          },
-          {
-            name: 'Y2Mate API',
-            url: `https://www.y2mate.com/mates/analyze/ajax`,
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-              'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: `url=${encodeURIComponent(url)}&q_auto=0&ajax=1`,
-            extractor: (html) => {
+            name: 'YT-DLP API (Proxy)',
+            url: `https://api.allorigins.win/get?url=${encodeURIComponent(`https://api.vevioz.com/api/button/mp3?url=${encodeURIComponent(url)}`)}`,
+            useProxy: true,
+            extractor: (data) => {
               try {
-                const data = JSON.parse(html);
-                if (data.result && data.result.links) {
-                  const audioLink = data.result.links.mp3 || data.result.links.wav;
-                  if (audioLink && audioLink.k) {
-                    return {
-                      href: `https://www.y2mate.com/mates/convert/${audioLink.k}/mp3/320`,
-                      textContent: 'WAV/MP3 İndir'
-                    };
-                  }
-                }
+                const html = data.contents || data;
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                const links = Array.from(tempDiv.querySelectorAll('a')).filter(a => 
+                  a.href && (a.href.includes('.mp3') || a.href.includes('.wav') || 
+                  a.textContent.includes('MP3') || a.textContent.includes('WAV'))
+                );
+                return links.length > 0 ? links[0] : null;
               } catch (e) {
-                console.log('Y2Mate parsing error:', e);
+                return null;
               }
-              return null;
+            }
+          },
+          {
+            name: 'YT-Download API (Proxy)',
+            url: `https://api.allorigins.win/get?url=${encodeURIComponent(`https://yt-download.org/api/button/audio?url=${encodeURIComponent(url)}`)}`,
+            useProxy: true,
+            extractor: (data) => {
+              try {
+                const html = data.contents || data;
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                const links = Array.from(tempDiv.querySelectorAll('a')).filter(a => 
+                  a.href && (a.href.includes('.mp3') || a.href.includes('.wav') || 
+                  a.textContent.includes('MP3') || a.textContent.includes('WAV'))
+                );
+                return links.length > 0 ? links[0] : null;
+              } catch (e) {
+                return null;
+              }
+            }
+          },
+          {
+            name: 'Y2Mate Direct',
+            url: null,
+            useProxy: false,
+            extractor: () => {
+              return {
+                href: `https://www.y2mate.com/en/search/${encodeURIComponent(url)}`,
+                textContent: 'Y2Mate İndirici',
+                download: false
+              };
+            }
+          },
+          {
+            name: 'Direct YouTube Link',
+            url: null,
+            useProxy: false,
+            extractor: () => {
+              // Direct download link using yt-dlp compatible services
+              return {
+                href: `https://www.youtube.com/watch?v=${videoId}`,
+                textContent: 'Video Sayfasına Git (Manuel İndirme)',
+                isDirect: false
+              };
             }
           }
         ];
@@ -167,11 +186,30 @@
           try {
             console.log(`Trying ${api.name}...`);
             
+            // If no URL, try direct extraction (for manual methods)
+            if (!api.url) {
+              const link = api.extractor();
+              if (link && link.href) {
+                resultDiv.innerHTML = `
+                  <div class="alert alert-info">
+                    <h6>Alternatif İndirme Yöntemi</h6>
+                    <p><strong>Kaynak:</strong> ${api.name}</p>
+                    <a href="${link.href}" class="btn btn-primary btn-lg mt-2" ${link.download !== false ? 'download' : ''} target="_blank">
+                      ${link.textContent || 'İndirme Sayfasına Git'}
+                    </a>
+                    <p class="mt-2 text-muted small">Bu link sizi indirme sayfasına yönlendirecek. Oradan ses dosyasını indirebilirsiniz.</p>
+                  </div>
+                `;
+                success = true;
+                break;
+              }
+              continue;
+            }
+            
             const response = await fetch(api.url, {
               method: api.method || 'GET',
               headers: {
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': api.useProxy ? 'application/json' : 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 ...api.headers
               },
               body: api.body,
@@ -180,15 +218,22 @@
             });
             
             if (response.ok) {
-              const html = await response.text();
-              const link = api.extractor(html);
+              let data;
+              if (api.useProxy) {
+                const jsonData = await response.json();
+                data = jsonData.contents || jsonData;
+              } else {
+                data = await response.text();
+              }
               
-              if (link) {
+              const link = api.extractor(data);
+              
+              if (link && link.href) {
                 resultDiv.innerHTML = `
                   <div class="alert alert-success">
                     <h6>İndirme Hazır!</h6>
                     <p><strong>Kaynak:</strong> ${api.name}</p>
-                    <a href="${link.href}" class="btn btn-success btn-lg mt-2" download target="_blank">
+                    <a href="${link.href}" class="btn btn-success btn-lg mt-2" ${link.download !== false ? 'download' : ''} target="_blank">
                       <i class="bi bi-download"></i> ${link.textContent || 'WAV/MP3 Dosyasını İndir'}
                     </a>
                     <p class="mt-2 text-muted small">Not: İndirme başlamazsa, linke sağ tıklayıp "Farklı kaydet" seçeneğini kullanın.</p>
@@ -216,19 +261,22 @@
         
         if (!success) {
           const isCorsError = lastError && lastError.includes('CORS');
+          const videoIdMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+          const videoId = videoIdMatch ? videoIdMatch[1] : null;
+          
           resultDiv.innerHTML = `
             <div class="alert alert-warning">
-              <h6>İndirme Bulunamadı</h6>
+              <h6>Otomatik İndirme Başarısız</h6>
               ${isCorsError ? `
                 <p><strong>CORS Hatası:</strong> Harici API'ler tarayıcıdan doğrudan erişime izin vermiyor.</p>
-                <p class="text-muted small">Bu bir güvenlik kısıtlamasıdır. Alternatif çözümler:</p>
+                <p class="text-muted small">Alternatif çözümler:</p>
                 <ul class="text-start">
-                  <li>Backend proxy servisi kullanın</li>
-                  <li>Browser extension kullanın</li>
-                  <li>Manuel olarak video ID'sini kopyalayıp yt-dlp gibi araçlar kullanın</li>
+                  <li><strong>Manuel İndirme:</strong> Aşağıdaki linklerden birini kullanın</li>
+                  <li><strong>yt-dlp:</strong> Komut satırından: <code>yt-dlp -x --audio-format wav "${url}"</code></li>
+                  <li><strong>Browser Extension:</strong> Video DownloadHelper veya benzeri eklentiler</li>
                 </ul>
               ` : `
-                <p>Bu video için ses dosyası bulunamadı. Lütfen:</p>
+                <p>Bu video için otomatik indirme bulunamadı. Lütfen:</p>
                 <ul class="text-start">
                   <li>Video linkinin doğru olduğundan emin olun</li>
                   <li>Video'nun herkese açık olduğunu kontrol edin</li>
@@ -236,6 +284,16 @@
                   <li>Birkaç dakika sonra tekrar deneyin</li>
                 </ul>
               `}
+              ${videoId ? `
+                <div class="mt-3">
+                  <p><strong>Manuel İndirme Linkleri:</strong></p>
+                  <div class="d-grid gap-2">
+                    <a href="https://www.youtube.com/watch?v=${videoId}" class="btn btn-outline-primary btn-sm" target="_blank">YouTube Video Sayfası</a>
+                    <a href="https://loader.to/en20/youtube-video-downloader/?url=${encodeURIComponent(url)}" class="btn btn-outline-secondary btn-sm" target="_blank">Loader.to İndirici</a>
+                    <a href="https://en.savefrom.net/#url=${encodeURIComponent(url)}" class="btn btn-outline-secondary btn-sm" target="_blank">SaveFrom.net İndirici</a>
+                  </div>
+                </div>
+              ` : ''}
               <p class="mt-2 text-muted small"><strong>Teknik Detay:</strong> ${lastError || 'Bilinmeyen hata'}</p>
             </div>
           `;
