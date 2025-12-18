@@ -220,6 +220,35 @@
             } catch (e) {
               // Sessizce geç
             }
+
+            // Yeni SW "waiting" durumundaysa hemen aktive ettir.
+            function tryActivateWaitingSw() {
+              if (registration.waiting) {
+                try {
+                  registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                } catch (e) {
+                  // Sessizce geç
+                }
+              }
+            }
+
+            tryActivateWaitingSw();
+
+            // Update bulunduğunda tekrar dene
+            registration.addEventListener('updatefound', function() {
+              const newWorker = registration.installing;
+              if (!newWorker) return;
+              newWorker.addEventListener('statechange', function() {
+                if (newWorker.state === 'installed') {
+                  tryActivateWaitingSw();
+                }
+              });
+            });
+
+            // Yeni SW kontrolü alınca otomatik reload (stale cache temizliği)
+            navigator.serviceWorker.addEventListener('controllerchange', function() {
+              window.location.reload();
+            });
           })
           .catch(function(err) {
             console.log('ServiceWorker registration failed:', err);

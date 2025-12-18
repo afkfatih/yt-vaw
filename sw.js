@@ -26,6 +26,14 @@ self.addEventListener('install', function(event) {
   );
 });
 
+// Allow page to force-activate updated SW immediately
+self.addEventListener('message', function(event) {
+  if (!event || !event.data) return;
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 // Fetch event
 self.addEventListener('fetch', function(event) {
   const request = event.request;
