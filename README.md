@@ -1,135 +1,85 @@
-# 🎵 YouTube WAV İndirici
+# YouTube → yt-dlp Komut Üretici
 
-[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live-brightgreen)](https://your-username.github.io/yt-wav-downloader)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live-brightgreen)](https://afkfatih.github.io/youtube-downloader/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![PWA](https://img.shields.io/badge/PWA-Enabled-blue)](https://web.dev/progressive-web-apps/)
-[![Mobile Friendly](https://img.shields.io/badge/Mobile-Friendly-green)](https://developers.google.com/search/mobile-sites)
 
-> GitHub Pages üzerinde çalışan, YouTube videolarını WAV/MP3 formatında indirmenizi sağlayan **tamamen ücretsiz** web uygulaması.
+YouTube linkini alır, video kimliğini çözer ve sesi **WAV / MP3** olarak indirmen için
+kendi makinende çalıştıracağın hazır [yt-dlp](https://github.com/yt-dlp/yt-dlp)
+komutunu üretir. Tek dosyalık statik sayfa, sunucu yok, izleme yok.
 
-## ✨ Özellikler
+**→ [afkfatih.github.io/youtube-downloader](https://afkfatih.github.io/youtube-downloader/)**
 
-- 🆓 **Tamamen Ücretsiz** - GitHub Pages üzerinde çalışır
-- 📱 **Mobil Uyumlu** - Tüm cihazlarda mükemmel çalışır
-- ⚡ **Hızlı İndirme** - Birden fazla API ile güvenilir indirme
-- 🎵 **WAV/MP3 Desteği** - Yüksek kaliteli ses dosyaları
-- 📲 **PWA Desteği** - Uygulama gibi kullanabilirsiniz
-- 🔒 **Güvenli** - Hiçbir veri saklanmaz
-- 🌐 **Offline Çalışma** - Service Worker ile offline destek
+## Neden komut üretiyor, indirmiyor?
 
-## 🚀 Canlı Demo
+GitHub Pages statik bir sunucudur; sunucu tarafında kod çalıştıramaz. YouTube da
+tarayıcıdan gelen isteklere CORS başlığı vermez. Yani bir tarayıcı sayfası tek başına
+ses akışını çekip WAV'a dönüştüremez — bunu yapan siteler kendi arka uç sunucularını
+kullanır.
 
-**[🌐 Uygulamayı Hemen Deneyin](https://your-username.github.io/yt-wav-downloader)**
+Bu sayfanın önceki sürümü kullanıcıyı üçüncü parti dönüştürücülere yönlendiriyordu.
+Bugün itibarıyla o üç servisin ikisi tamamen ölü (`api.vevioz.com` → 404,
+`y2mate.com` → DNS kaydı yok), üçüncüsü ise reklam engelleyici tespiti yapan bir
+yönlendirme sayfası döndürüyor. Bu yüzden hepsi kaldırıldı: aracı yerine doğrudan
+komut veriliyor.
 
-## 🎯 Nasıl Kullanılır
+## Kullanım
 
-1. **YouTube video linkini** girin
-2. **"İndir"** butonuna tıklayın
-3. **İndirme linkini** alın ve dosyayı indirin
+1. YouTube linkini yapıştır
+2. **Komutu oluştur**'a bas
+3. İstediğin formatın komutunu kopyala, terminalinde çalıştır
 
-### Desteklenen Link Formatları
-- `https://www.youtube.com/watch?v=VIDEO_ID`
-- `https://youtu.be/VIDEO_ID`
-- `https://youtube.com/watch?v=VIDEO_ID`
+Üretilen komutlar:
 
-## 🔧 Teknik Detaylar
+| Format | Komut |
+|---|---|
+| WAV (kayıpsız) | `yt-dlp -x --audio-format wav '<url>'` |
+| MP3 (en yüksek kalite) | `yt-dlp -x --audio-format mp3 --audio-quality 0 '<url>'` |
+| Video + ses | `yt-dlp -f "bv*+ba/b" '<url>'` |
 
-| Teknoloji | Açıklama |
-|-----------|----------|
-| **Frontend** | HTML5, CSS3, JavaScript (ES6+) |
-| **UI Framework** | Bootstrap 5.3 |
-| **PWA** | Service Worker ile offline destek |
-| **API'ler** | YT-DLP, Y2Mate, YT-Download |
-| **Hosting** | GitHub Pages (Ücretsiz) |
+Gereksinimler: `pip install -U yt-dlp` ve ses dönüştürme için `ffmpeg`.
 
-## 📱 Mobil Uyumluluk
+### Desteklenen link formatları
 
-- ✅ iOS Safari
-- ✅ Android Chrome
-- ✅ PWA olarak yüklenebilir
-- ✅ Touch-friendly arayüz
-- ✅ Responsive tasarım
+- `youtube.com/watch?v=ID`
+- `youtu.be/ID`
+- `youtube.com/shorts/ID`
+- `youtube.com/embed/ID`
+- `youtube.com/live/ID`
+- `youtube.com/v/ID`
+- `music.youtube.com` ve `m.youtube.com` alt alan adları
 
-## 🛠️ Geliştirme
+Doğrulama yalnızca **hostname** üzerinden yapılır ve video kimliği 11 karakterlik
+base64url deseniyle eşleşmek zorundadır.
 
-### Yerel Geliştirme
+## Teknik detaylar
+
+| Konu | Durum |
+|---|---|
+| Bağımlılık | Yok. Tek `index.html`, saf JavaScript |
+| UI | Bootstrap 5.3, CDN'den SRI (`integrity`) doğrulamalı |
+| PWA | Service Worker; Bootstrap CSS dahil precache — çevrimdışı **stilli** açılır |
+| Cache stratejisi | Gezinmelerde network-first, varlıklarda stale-while-revalidate |
+| Veri | Hiçbir istek sunucuya gitmez; link tarayıcıda ayrıştırılır |
+
+## Yerel çalıştırma
+
+Service Worker `file://` üzerinde çalışmaz, bir HTTP sunucusu gerekir:
+
 ```bash
-# Repository'yi clone edin
-git clone https://github.com/your-username/yt-wav-downloader.git
-cd yt-wav-downloader
-
-# index.html dosyasını tarayıcıda açın
-open index.html
+git clone https://github.com/afkfatih/youtube-downloader.git
+cd youtube-downloader
+python -m http.server 8000
+# http://localhost:8000
 ```
 
-### Katkıda Bulunma
-1. **Fork** edin bu repository'yi
-2. **Branch** oluşturun (`git checkout -b feature/amazing-feature`)
-3. **Commit** yapın (`git commit -m 'Add amazing feature'`)
-4. **Push** edin (`git push origin feature/amazing-feature`)
-5. **Pull Request** açın
+## Yasal uyarı
 
-Detaylı bilgi için [CONTRIBUTING.md](CONTRIBUTING.md) dosyasını inceleyin.
+Bu depo bir indirme aracı barındırmaz; yalnızca yt-dlp komut satırı üretir.
+YouTube'un hizmet şartları, izin verilmeyen içeriklerin indirilmesini kısıtlar.
+Yalnızca **size ait olan**, açık lisanslı veya hak sahibinin indirilmesine izin
+verdiği içerikleri indirin. Sorumluluk kullanıcıya aittir.
 
-## 🚀 GitHub Pages'e Deploy Etme
+## Lisans
 
-### Otomatik Deploy
-1. Bu repository'yi **fork** edin
-2. **Settings > Pages** bölümüne gidin
-3. **Source** olarak "Deploy from a branch" seçin
-4. **Branch** olarak "main" seçin
-5. **Save** butonuna tıklayın
-
-Uygulamanız `https://kullaniciadi.github.io/yt-wav-downloader` adresinde yayında olacak!
-
-### Manuel Deploy
-```bash
-# Dosyaları GitHub'a push edin
-git add .
-git commit -m "Deploy to GitHub Pages"
-git push origin main
-```
-
-## 📊 API'ler
-
-Bu uygulama aşağıdaki API'leri kullanır:
-
-| API | Açıklama | Durum |
-|-----|----------|-------|
-| **YT-DLP API** | Ana indirme API'si | ✅ Aktif |
-| **Y2Mate API** | Yedek indirme API'si | ✅ Aktif |
-| **YT-Download API** | Alternatif API | ✅ Aktif |
-
-## ⚖️ Yasal Uyarı
-
-> ⚠️ **ÖNEMLİ**: Bu uygulama sadece telif hakkı koruması olmayan veya izin verilen içeriklerin indirilmesi için tasarlanmıştır. Lütfen telif haklarına saygı gösterin ve sadece yasal içerikleri indirin.
-
-## 🤝 Katkıda Bulunanlar
-
-Bu projeye katkıda bulunan herkese teşekkürler! 🙏
-
-- [@your-username](https://github.com/your-username) - Proje sahibi
-
-## 📈 İstatistikler
-
-![GitHub stars](https://img.shields.io/github/stars/your-username/yt-wav-downloader?style=social)
-![GitHub forks](https://img.shields.io/github/forks/your-username/yt-wav-downloader?style=social)
-![GitHub issues](https://img.shields.io/github/issues/your-username/yt-wav-downloader)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/your-username/yt-wav-downloader)
-
-## 📄 Lisans
-
-Bu proje [MIT License](LICENSE) altında lisanslanmıştır. Detaylar için `LICENSE` dosyasını inceleyin.
-
-## 🆘 Destek
-
-- 🐛 **Bug raporu**: [Issues](https://github.com/your-username/yt-wav-downloader/issues) bölümünden
-- 💡 **Özellik isteği**: [Feature Request](https://github.com/your-username/yt-wav-downloader/issues/new?template=feature_request.md) template'ini kullanın
-- ❓ **Sorular**: [Discussions](https://github.com/your-username/yt-wav-downloader/discussions) bölümünden
-
----
-
-<div align="center">
-  <p>⭐ Bu projeyi beğendiyseniz yıldız vermeyi unutmayın!</p>
-  <p>Made with ❤️ by [Your Name]</p>
-</div>
+[MIT](LICENSE)

@@ -1,55 +1,64 @@
-const CACHE_NAME = 'yt-vaw-v2';
+const CACHE_NAME = 'yt-dlp-cmd-v3';
+
+const BOOTSTRAP_CSS =
+  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css';
+
 const PRECACHE_URLS = [
   './',
   './index.html',
+  './404.html',
   './favicon.svg',
   './icon-192x192.png',
   './icon-512x512.png',
-  './manifest.json'
+  './manifest.json',
+  // Bootstrap CDN'den geliyor. Precache edilmezse "offline çalışır" iddiası
+  // yalan olur: sayfa açılır ama tamamen stilsiz görünür.
+  BOOTSTRAP_CSS
 ];
 
-// Install event
-self.addEventListener('install', function(event) {
+self.addEventListener('install', function (event) {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then(function(cache) {
-        return cache.addAll(PRECACHE_URLS);
+      .then(function (cache) {
+        // Tek tek eklenir: addAll bir URL'de başarısız olursa tüm precache'i
+        // iptal eder, bu yüzden CDN'in erişilemez olması her şeyi çökertirdi.
+        return Promise.all(
+          PRECACHE_URLS.map(function (url) {
+            return cache.add(url).catch(function () {});
+          })
+        );
       })
-      .then(function() {
-        return self.skipWaiting();
-      })
-      .catch(function() {
-        // Ağ hatasında bile SW kurulsun; PWA cache opsiyonel.
+      .then(function () {
         return self.skipWaiting();
       })
   );
 });
 
-// Fetch event
-self.addEventListener('fetch', function(event) {
+self.addEventListener('fetch', function (event) {
   const request = event.request;
-
-  // Sadece GET isteklerini ve sadece same-origin istekleri cache'le.
-  // Harici API'lere yapılan fetch'ler (CORS vb.) SW tarafından ele alınmasın.
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin) return;
+  const isSameOrigin = url.origin === self.location.origin;
+  const isPrecachedCdn = request.url === BOOTSTRAP_CSS;
 
-  // Navigations: network-first (offline'da cache'e düş)
+  // Diğer harici istekler (küçük resim vb.) SW'ye uğramadan geçsin.
+  if (!isSameOrigin && !isPrecachedCdn) return;
+
+  // Gezinmeler: network-first, çevrimdışında cache'e düş.
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
-        .then(function(response) {
+        .then(function (response) {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then(function(cache) {
+          caches.open(CACHE_NAME).then(function (cache) {
             cache.put(request, copy);
           });
           return response;
         })
-        .catch(function() {
-          return caches.match(request).then(function(cached) {
+        .catch(function () {
+          return caches.match(request).then(function (cached) {
             return cached || caches.match('./index.html');
           });
         })
@@ -57,41 +66,43 @@ self.addEventListener('fetch', function(event) {
     return;
   }
 
-  // Diğer same-origin GET'ler: cache-first + arkaplanda güncelle
+  // Varlıklar: stale-while-revalidate. Eski davranış saf cache-first'tü;
+  // bir kez cache'lenen dosya asla tazelenmiyordu.
   event.respondWith(
-    caches.match(request).then(function(cached) {
-      if (cached) return cached;
-
-      return fetch(request)
-        .then(function(response) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(function(cache) {
-            cache.put(request, copy);
-          });
+    caches.match(request).then(function (cached) {
+      const network = fetch(request)
+        .then(function (response) {
+          if (response && (response.ok || response.type === 'opaque')) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(function (cache) {
+              cache.put(request, copy);
+            });
+          }
           return response;
         })
-        .catch(function() {
+        .catch(function () {
           return cached;
         });
+
+      return cached || network;
     })
   );
 });
 
-// Activate event
-self.addEventListener('activate', function(event) {
+self.addEventListener('activate', function (event) {
   event.waitUntil(
     caches
       .keys()
-      .then(function(cacheNames) {
+      .then(function (cacheNames) {
         return Promise.all(
-          cacheNames.map(function(cacheName) {
+          cacheNames.map(function (cacheName) {
             if (cacheName !== CACHE_NAME) {
               return caches.delete(cacheName);
             }
           })
         );
       })
-      .then(function() {
+      .then(function () {
         return self.clients.claim();
       })
   );

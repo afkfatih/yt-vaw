@@ -36,8 +36,16 @@ Bu projeye katkıda bulunmak istediğiniz için teşekkürler! 🎉
 - GitHub hesabı
 
 ### Yerel Test
-1. `index.html` dosyasını tarayıcıda açın
-2. Farklı YouTube linkleri test edin
+
+Service Worker `file://` üzerinde çalışmaz, bir HTTP sunucusu gerekir:
+
+```bash
+python -m http.server 8000
+# http://localhost:8000
+```
+
+1. Farklı YouTube link formatlarını test edin
+2. Geçersiz ve YouTube dışı linkleri test edin
 3. Mobil cihazlarda test edin
 
 ## 📋 Kod Standartları
@@ -55,17 +63,20 @@ Bu projeye katkıda bulunmak istediğiniz için teşekkürler! 🎉
 ## 🧪 Test Etme
 
 ### Test Senaryoları
-- [ ] Geçerli YouTube linki
-- [ ] Geçersiz link
-- [ ] Özel video
-- [ ] Canlı yayın
+- [ ] `watch?v=`, `youtu.be`, `shorts`, `embed`, `live`, `/v/` formatları
+- [ ] Oynatma listesi linki (açıklayıcı hata vermeli)
+- [ ] YouTube dışı alan adı (reddedilmeli)
+- [ ] Geçersiz uzunlukta video kimliği (reddedilmeli)
+- [ ] Çevrimdışı açılış (Service Worker + Bootstrap precache)
 - [ ] Mobil cihazlarda çalışma
 
 ### Test Linkleri
 ```
-Geçerli: https://www.youtube.com/watch?v=dQw4w9WgXcQ
-Kısa: https://youtu.be/dQw4w9WgXcQ
-Özel: [Özel video linki]
+Geçerli:   https://www.youtube.com/watch?v=dQw4w9WgXcQ
+Kısa:      https://youtu.be/dQw4w9WgXcQ
+Shorts:    https://www.youtube.com/shorts/dQw4w9WgXcQ
+Liste:     https://www.youtube.com/playlist?list=PLxxxxxx
+Reddedilir: https://kotu-site.example/?x=youtube.com
 ```
 
 ## 📝 Commit Mesajları
@@ -92,19 +103,20 @@ docs(readme): update installation guide
 ## 🎯 Öncelikli Alanlar
 
 ### Yüksek Öncelik
-- [ ] Daha fazla API desteği
-- [ ] Hata yönetimi iyileştirmeleri
-- [ ] Performans optimizasyonları
+- [ ] Hata mesajlarının netleştirilmesi
+- [ ] Erişilebilirlik (klavye navigasyonu, odak yönetimi)
 
 ### Orta Öncelik
 - [ ] Dark mode
-- [ ] Dil desteği
-- [ ] Gelişmiş filtreleme
+- [ ] İngilizce dil desteği
+- [ ] Ek yt-dlp seçenekleri (altyazı, bölüm, zaman aralığı)
 
 ### Düşük Öncelik
-- [ ] Playlist desteği
-- [ ] Batch indirme
-- [ ] Gelişmiş format seçenekleri
+- [ ] Oynatma listesi için toplu komut üretimi
+- [ ] Komut ön ayarlarının yerel olarak saklanması
+
+> Not: Üçüncü parti dönüştürücü servisleri bilinçli olarak kaldırıldı; geri
+> eklenmesi önerilmiyor. Gerekçe için CHANGELOG 2.0.0'a bakın.
 
 ## 🤝 Davranış Kuralları
 

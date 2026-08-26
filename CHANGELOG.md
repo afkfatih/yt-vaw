@@ -1,50 +1,58 @@
 # Changelog
 
-Bu dosya bu projedeki tüm önemli değişiklikleri belgeler.
+Bu dosya projedeki önemli değişiklikleri belgeler.
+Format [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) standardına uygundur,
+sürümleme [Semantic Versioning](https://semver.org/spec/v2.0.0.html) kullanır.
 
-Format [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) standardına uygun olarak düzenlenmiştir,
-ve bu proje [Semantic Versioning](https://semver.org/spec/v2.0.0.html) kullanır.
+## [2.0.0] - 2026-08-27
 
-## [Unreleased]
-
-### Added
-- Yeni özellikler buraya eklenecek
-
-### Changed
-- Mevcut özelliklerdeki değişiklikler buraya eklenecek
-
-### Deprecated
-- Kullanımdan kaldırılacak özellikler buraya eklenecek
-
-### Removed
-- Kaldırılan özellikler buraya eklenecek
-
-### Fixed
-- Düzeltilen hatalar buraya eklenecek
+Uygulama üçüncü parti dönüştürücü yönlendiricisi olmaktan çıkıp yt-dlp komut
+üreticisine dönüştü.
 
 ### Security
-- Güvenlik güncellemeleri buraya eklenecek
+- **DOM XSS giderildi.** Ayrıştırılan video kimliği `innerHTML` şablonuna
+  gömülüyordu; `v=%3Cimg%20src%3Dx%20onerror%3D…%3E` biçimli bir link script
+  çalıştırabiliyordu. Tüm sonuç arayüzü artık DOM API'leri ve `textContent` ile
+  kuruluyor.
+- **Link doğrulaması sıkılaştırıldı.** Eski kontrol `url.includes('youtube.com')`
+  idi ve `https://kotu-site.example/?x=youtube.com` adresini kabul ediyordu. Artık
+  hostname bir izin listesiyle karşılaştırılıyor, video kimliği 11 karakterlik
+  base64url desenine uymak zorunda.
+- Bootstrap CDN bağlantısına `integrity` (SRI) ve `crossorigin` eklendi.
 
-## [1.0.0] - 2024-01-XX
+### Removed
+- Vevioz, Y2Mate ve YT-Download yönlendirmeleri kaldırıldı. Doğrulandı:
+  `api.vevioz.com` 404 dönüyor, `y2mate.com` DNS'te yok, `yt-download.org` reklam
+  engelleyici tespit sayfasına yönlendiriyor.
 
 ### Added
-- İlk sürüm yayınlandı
-- YouTube video indirme özelliği
-- WAV/MP3 format desteği
-- Mobil uyumlu arayüz
-- PWA desteği
-- Service Worker ile offline çalışma
-- Çoklu API desteği (YT-DLP, Y2Mate, YT-Download)
-- Bootstrap 5.3 UI framework
-- GitHub Pages uyumluluğu
-- MIT lisansı
-- Katkıda bulunma rehberi
-- Issue ve PR template'leri
+- WAV / MP3 / video+ses için kopyalanabilir yt-dlp komutları.
+- Video küçük resmi önizlemesi.
+- `shorts`, `embed`, `live`, `/v/` yolları ile `music.youtube.com` ve
+  `m.youtube.com` alt alan adları için link desteği.
+- Oynatma listesi linki girildiğinde açıklayıcı hata mesajı.
 
-### Technical Details
-- HTML5, CSS3, JavaScript (ES6+)
-- Bootstrap 5.3
-- Service Worker API
-- Fetch API
-- Progressive Web App (PWA)
-- GitHub Pages hosting
+### Fixed
+- `manifest.json` içindeki `start_url` `/` idi; proje sitesi
+  `/youtube-downloader/` altında yayınlandığı için PWA kapsamı hatalıydı.
+  `./` olarak düzeltildi, `scope` ve `id` eklendi.
+- `404.html` içindeki "Ana sayfaya dön" bağlantısı kullanıcıyı
+  `afkfatih.github.io` köküne atıyordu.
+- Service Worker varlıklar için saf cache-first çalışıyordu; bir kez önbelleğe
+  alınan dosya asla tazelenmiyordu. Stale-while-revalidate'e geçildi.
+- Bootstrap CSS precache edilmediği için "çevrimdışı çalışır" iddiası sayfayı
+  stilsiz açıyordu. Artık precache ediliyor.
+- `cache.addAll` tek bir URL'de başarısız olunca tüm precache iptal oluyordu;
+  girişler tek tek ekleniyor.
+- `touchcancel` dinlenmediği için iptal edilen dokunuşta buton küçülmüş kalıyordu.
+- `user-select: none` tüm `body` üzerindeydi; sayfadaki hiçbir metin
+  seçilemiyordu. Yalnızca butonlarla sınırlandırıldı.
+- `user-scalable=no` kaldırıldı (erişilebilirlik).
+- README'deki `your-username` / `yt-wav-downloader` yer tutucuları gerçek repo
+  adresleriyle değiştirildi; canlı demo bağlantısı ve tüm rozetler artık çalışıyor.
+
+## [1.0.0] - 2025-07-25
+
+### Added
+- İlk sürüm: Bootstrap tabanlı tek sayfalık arayüz, PWA desteği,
+  üçüncü parti dönüştürücülere yönlendirme, MIT lisansı, issue/PR template'leri.
